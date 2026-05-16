@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
  * 如果导出后图标仍偏高，调大这个值（如 3 或 4）；
  * 如果图标偏低，调小或改为负数。
  */
-const ICON_OFFSET_Y = 2;
+const ICON_OFFSET_Y = 4;
 
 function fixCloneForPdf(clone: HTMLElement) {
   // ── 1. 防止条目被分页切断 ──
@@ -51,22 +51,33 @@ function fixCloneForPdf(clone: HTMLElement) {
 
       // 如果父元素是 flex，改成 inline-block 避免 flex 基线计算差异
       if (computed.display.includes('flex')) {
+        // 切到 inline-block 后 CSS gap 不再生效，先把原 column-gap 读出来，
+        // 后面用 marginRight 还原图标和文字之间的间距，避免两者贴在一起。
+        const parsedGap = parseFloat(computed.columnGap || computed.gap || '');
+        const iconGapPx = parsedGap > 0 ? parsedGap : 6;
+
         parent.style.display = 'inline-block';
         parent.style.verticalAlign = 'middle';
         parent.style.gap = '0';
 
+        img.style.marginRight = `${iconGapPx}px`;
+
         // 把后续文本节点也改为 inline-block + text-bottom，和图标对齐
         let sibling = img.nextSibling || svg.nextSibling;
         while (sibling) {
+          const next = sibling.nextSibling;
           if (sibling.nodeType === Node.TEXT_NODE) {
             const text = sibling.textContent || '';
             const trimmed = text.trim();
             if (trimmed) {
               const span = document.createElement('span');
-              span.textContent = ' ' + trimmed + ' ';
+              span.textContent = trimmed;
               span.style.display = 'inline-block';
               span.style.verticalAlign = 'text-bottom';
               parent.replaceChild(span, sibling);
+            } else {
+              // 移除空白文本节点，避免它和 marginRight 叠加成多余间距
+              parent.removeChild(sibling);
             }
           } else if (sibling.nodeType === Node.ELEMENT_NODE) {
             const el = sibling as HTMLElement;
@@ -75,7 +86,7 @@ function fixCloneForPdf(clone: HTMLElement) {
               el.style.verticalAlign = 'text-bottom';
             }
           }
-          sibling = sibling.nextSibling;
+          sibling = next;
         }
       }
     }
