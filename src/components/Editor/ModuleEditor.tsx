@@ -46,12 +46,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
   const handleItemDragOver = (e: React.DragEvent, itemIndex: number) => {
     e.preventDefault();
     if (draggedItemIndex === null || draggedItemIndex === itemIndex) return;
-    
-    const newItems = [...module.items];
-    const [removed] = newItems.splice(draggedItemIndex, 1);
-    newItems.splice(itemIndex, 0, removed);
-    
-    store.modules[index] = { ...module, items: newItems };
+    store.reorderItem(module.id, draggedItemIndex, itemIndex);
     setDraggedItemIndex(itemIndex);
   };
 
