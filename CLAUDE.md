@@ -6,7 +6,7 @@
 
 **核心设计原则**：
 - 所有数据存储在浏览器端，不依赖后端/数据库
-- 用户数据通过 JSON 文件本地导入/导出实现持久化
+- 用户数据自动写入 localStorage（刷新不丢），同时支持 JSON 文件导入/导出
 - 模块化架构，支持自由增删改模块、拖拽排序、自定义模块
 
 ---
@@ -18,8 +18,8 @@
 | React 18 + TypeScript | UI 框架 |
 | Vite | 构建工具 |
 | Tailwind CSS | 原子化样式 |
-| Zustand | 全局状态管理 |
-| marked | Markdown 渲染 |
+| Zustand + persist | 全局状态管理 + localStorage 自动暂存 |
+| marked + DOMPurify | Markdown 渲染 + XSS 防护 |
 | html2canvas + jspdf | PDF 导出 |
 | docx + file-saver | Word 导出 |
 | lucide-react | 图标库 |
@@ -103,6 +103,8 @@ interface ResumeData {
 
 ## 状态管理（Zustand）
 
+Store 用 `zustand/middleware` 的 `persist` 包过，数据自动同步到 `localStorage["resume-builder-data"]`；只持久化 `personalInfo / modules / template` 三个数据字段，不持久化 action。
+
 Store 提供以下操作：
 
 ```ts
@@ -125,6 +127,7 @@ moveModule(fromIndex, toIndex)      // 拖拽排序模块
 addItem(moduleId)             // 在指定模块中添加空条目
 removeItem(moduleId, itemId)  // 删除条目
 updateItem(moduleId, itemId, data)  // 更新条目字段
+reorderItem(moduleId, fromIndex, toIndex)  // 拖拽排序条目
 ```
 
 ---
@@ -226,3 +229,61 @@ npm run preview
 2. **PDF 分页**：html2canvas 截图生成 PDF，超长简历可能分页不精确
 3. **Word 导出样式**：docx.js 生成的 Word 文档为简化样式，与网页预览有差异
 4. **拖拽排序**：模块和条目均使用 HTML5 原生拖拽，无拖拽占位动画
+5. **localStorage 容量**：浏览器一般给单 origin 5-10MB；头像 base64 接近 2MB 上限 + 大量条目时，写入可能抛 `QuotaExceededError`（暂未做兜底）
+
+---
+
+## 规划中的功能
+
+### 用户自定义主题（D+ 方案）
+
+允许用户上传自己的简历主题，**仅作本地使用，不做共享分发**。一旦做共享市场，就要承担审核 / 版权 / 运维责任，超出个人项目可持续投入的边界。
+
+**方案选型**：不引入模板 DSL，而是基于现有 3 个内置模板暴露主题变量 + 字段开关。用户上传的是 `theme.json`（纯数据），不是模板代码 —— 没有 XSS / 数据外发风险，也不需要设计 DSL 抽象。
+
+**theme.json 示意结构**（待定稿）：
+
+```json
+{
+  "name": "我的主题",
+  "baseTemplate": "modern",
+  "colors": {
+    "primary": "#3b82f6",
+    "text": "#1f2937",
+    "muted": "#6b7280",
+    "accent": "#f59e0b"
+  },
+  "fonts": {
+    "body": "Inter",
+    "heading": "Inter"
+  },
+  "spacing": {
+    "pagePadding": "40px",
+    "moduleGap": "24px"
+  },
+  "showIcons": true,
+  "fieldVisibility": {
+    "experience": { "position": true, "description": true },
+    "education":  { "ranking": false, "description": false }
+  }
+}
+```
+
+**核心待办**：
+
+1. Theme schema 定义 + zod 校验
+2. **重构 3 个内置模板**：把硬编码颜色（`text-blue-600` 等）换成 CSS 变量（占工作量大头，仔细做避免视觉回归）
+3. ThemeProvider：把 `--theme-*` 变量注入到 `#resume-preview` 根节点
+4. store 加 `theme` 字段，走现有 zustand persist
+5. **字段显隐开关**：每个 `ModuleType` 暴露哪些字段可隐藏（如 `experience.position` / `education.ranking`），在 ModuleEditor 顶部加 toggle
+6. **Curated 字体包**：内置 5-10 种预设字体（思源宋体 / Inter / JetBrains Mono / 系统字体 等），不接受任意字体 URL（避免 `@font-face url(...)` 外发用户 IP 给第三方）
+7. UI：在"选择模板"下面加"导入/导出主题 JSON"按钮，复用现有 import/export 逻辑
+8. 验证 PDF / Word 导出仍正确（html2canvas 支持 CSS 变量；Word 导出需要在 `exportWord.ts` 里也读 theme 配色）
+
+**预估工作量**：1.5-2 天。其中第 2 步（重构模板硬编码颜色）占 3-4 小时，其余各 0.5-1 小时。
+
+**核心权衡 / 不做的事**：
+
+- **不支持自由 layout 自定义**（双栏改单栏、模块移到 header 内嵌等）—— 那是"方案 B"（JSON DSL）的范畴，工作量 10-15 天，且 DSL 抽象边界设计本身是巨大的不确定性投入。除非未来有明确用户需求验证，否则不启动 B。
+- **主题不上传共享市场**。用户之间想交换 theme.json 自己走 Discord / GitHub Gist 即可，App 只提供导入接口。
+- **theme.json 内禁止任意 HTML / JS / 远程 URL**（XSS + 数据外发风险）。颜色字段只接受 hex / hsl 字符串，字体字段只接受预设字体名。
