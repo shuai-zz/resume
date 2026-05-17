@@ -94,7 +94,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
           onChange={(e) => store.updateItem(module.id, item.id, { [field.key]: e.target.value })}
           placeholder={field.placeholder}
           rows={2}
-          className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
       );
     }
@@ -104,7 +104,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
         <select
           value={value}
           onChange={(e) => store.updateItem(module.id, item.id, { [field.key]: e.target.value })}
-          className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">选择等级</option>
           <option value="精通">精通</option>
@@ -121,22 +121,22 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
         value={value}
         onChange={(e) => store.updateItem(module.id, item.id, { [field.key]: e.target.value })}
         placeholder={field.placeholder}
-        className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     );
   };
 
   return (
     <div
-      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+      className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden"
       draggable
       onDragStart={() => onDragStart(index)}
       onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
       onDragEnd={onDragEnd}
     >
       {/* Module Header */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100 cursor-move">
-        <GripVertical size={18} className="text-gray-400 shrink-0" />
+      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-700 cursor-move">
+        <GripVertical size={18} className="text-gray-400 dark:text-slate-500 shrink-0" />
 
         {editingTitle ? (
           <div className="flex items-center gap-2 flex-1">
@@ -144,17 +144,17 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
               type="text"
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
-              className="flex-1 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveTitle();
                 if (e.key === 'Escape') handleCancelTitle();
               }}
             />
-            <button onClick={handleSaveTitle} className="text-green-600 hover:text-green-800">
+            <button onClick={handleSaveTitle} className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
               <Check size={16} />
             </button>
-            <button onClick={handleCancelTitle} className="text-gray-500 hover:text-gray-700">
+            <button onClick={handleCancelTitle} className="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200">
               <X size={16} />
             </button>
           </div>
@@ -162,16 +162,16 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
           <>
             <button
               onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1 flex-1 text-left font-bold text-gray-800 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-1 flex-1 text-left font-bold text-gray-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               <span>{module.title}</span>
-              <span className="text-xs text-gray-400 font-normal ml-1">({module.items.length})</span>
+              <span className="text-xs text-gray-400 dark:text-slate-500 font-normal ml-1">({module.items.length})</span>
             </button>
             {SORTABLE_TYPES.includes(module.type) && (
               <button
                 onClick={() => store.toggleModuleSort(module.id)}
-                className={`p-1 ${module.sortByDateDesc ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                className={`p-1 ${module.sortByDateDesc ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400'}`}
                 title={module.sortByDateDesc ? '已按时间倒序（点击关闭）' : '按时间倒序'}
               >
                 <ArrowDownWideNarrow size={14} />
@@ -179,14 +179,14 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
             )}
             <button
               onClick={() => setEditingTitle(true)}
-              className="text-gray-400 hover:text-blue-600 p-1"
+              className="text-gray-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1"
               title="重命名"
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={() => store.removeModule(module.id)}
-              className="text-gray-400 hover:text-red-600 p-1"
+              className="text-gray-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 p-1"
               title="删除模块"
             >
               <Trash2 size={14} />
@@ -209,7 +209,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
               }}
               rows={8}
               placeholder="使用 Markdown 语法：- 列表、**粗体**、## 标题、`代码`"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
+              className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
             />
           </div>
         ) : (
@@ -219,14 +219,14 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
             return (
             <div
               key={item.id}
-              className="border border-gray-200 rounded-md p-3 bg-gray-50/50"
+              className="border border-gray-200 dark:border-slate-700 rounded-md p-3 bg-gray-50/50 dark:bg-slate-900/50"
               draggable={!sortLocked}
               onDragStart={() => { if (!sortLocked) handleItemDragStart(itemIndex); }}
               onDragOver={(e) => { if (!sortLocked) handleItemDragOver(e, itemIndex); }}
               onDragEnd={handleItemDragEnd}
             >
               <div className="flex justify-between items-center mb-2">
-                <div className={`flex items-center gap-1 ${sortLocked ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 cursor-move'}`}
+                <div className={`flex items-center gap-1 ${sortLocked ? 'text-gray-300 dark:text-slate-600 cursor-not-allowed' : 'text-gray-400 dark:text-slate-500 cursor-move'}`}
                   title={sortLocked ? '排序模式下不可拖拽' : ''}
                 >
                   <GripVertical size={14} />
@@ -234,7 +234,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
                 </div>
                 <button
                   onClick={() => store.removeItem(module.id, item.id)}
-                  className="text-red-400 hover:text-red-600 p-0.5"
+                  className="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 p-0.5"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -243,7 +243,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
               <div className={`grid gap-2 ${config.itemFields.length > 4 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {config.itemFields.map((field) => (
                   <div key={field.key} className={field.type === 'textarea' ? 'col-span-full' : ''}>
-                    <label className="block text-xs text-gray-500 mb-0.5">{field.label}</label>
+                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-0.5">{field.label}</label>
                     {renderField(item, field)}
                   </div>
                 ))}
@@ -254,7 +254,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
 
           <button
             onClick={() => store.addItem(module.id)}
-            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium w-full justify-center py-2 border border-dashed border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium w-full justify-center py-2 border border-dashed border-blue-300 dark:border-blue-700 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
           >
             <Plus size={16} /> 添加条目
           </button>

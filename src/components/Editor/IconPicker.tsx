@@ -30,15 +30,15 @@ export default function IconPicker({ icon, onChange, size = 16 }: IconPickerProp
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 border border-gray-300 rounded-md px-2 py-1.5 text-gray-600 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+        className="flex items-center gap-1 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-md px-2 py-1.5 text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
         title="选择图标"
       >
         <Current size={size} />
-        <ChevronDown size={12} className="text-gray-400" />
+        <ChevronDown size={12} className="text-gray-400 dark:text-slate-500" />
       </button>
 
       {open && (
-        <div className="absolute z-20 top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 grid grid-cols-6 gap-1 w-[240px]">
+        <div className="absolute z-20 top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-lg p-2 grid grid-cols-6 gap-1 w-[240px]">
           {ICON_NAMES.map((name) => {
             const Icon = ICON_REGISTRY[name];
             const active = name === icon;
@@ -51,7 +51,7 @@ export default function IconPicker({ icon, onChange, size = 16 }: IconPickerProp
                 className={`p-1.5 rounded transition-colors flex items-center justify-center ${
                   active
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+                    : 'text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
               >
                 <Icon size={16} />

@@ -51,7 +51,7 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
             <img
               src={avatar}
               alt="头像"
-              className="w-20 h-20 rounded-md object-cover border-2 border-gray-200"
+              className="w-20 h-20 rounded-md object-cover border-2 border-gray-200 dark:border-slate-700"
             />
             <button
               onClick={handleRemove}
@@ -66,9 +66,9 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
             onClick={handleClick}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className="w-20 h-20 rounded-md bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            className="w-20 h-20 rounded-md bg-gray-100 dark:bg-slate-800 border-2 border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
           >
-            <User size={28} className="text-gray-400" />
+            <User size={28} className="text-gray-400 dark:text-slate-500" />
           </div>
         )}
       </div>
@@ -84,12 +84,12 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
         />
         <button
           onClick={handleClick}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-medium"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md transition-colors font-medium"
         >
           <Upload size={14} />
           {avatar ? '更换头像' : '上传头像'}
         </button>
-        <p className="text-xs text-gray-400 mt-1.5">
+        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">
           支持 JPG、PNG 格式，最大 2MB
         </p>
       </div>
