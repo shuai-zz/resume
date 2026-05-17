@@ -181,6 +181,9 @@ export async function exportToWord(data: ResumeData, filename: string = '简历.
     personalInfo.phone,
     personalInfo.location,
     personalInfo.website,
+    ...(personalInfo.customFields ?? [])
+      .filter((f) => f.value)
+      .map((f) => (f.label ? `${f.label}: ${f.value}` : f.value)),
   ].filter(Boolean);
   if (contactParts.length > 0) {
     children.push(

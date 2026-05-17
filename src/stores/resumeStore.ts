@@ -119,9 +119,9 @@ export const useResumeStore = create<ResumeStore>()(
     }),
     {
       name: 'resume-builder-data',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
-      // v1 → v2: 删 personalInfo.summary、滤掉 skills 模块、保证头部有 summary 模块
+      // 旧版本 → 当前：删 personalInfo.summary、滤掉 skills 模块、补 summary 模块、补 customFields
       migrate: (persistedState: any, _fromVersion) => sanitizeResumeData(persistedState),
       // 只持久化数据，不持久化 action（action 在每次启动时由 create 重新挂上）
       partialize: (state) => ({

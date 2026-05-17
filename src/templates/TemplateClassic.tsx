@@ -1,6 +1,7 @@
 import { Mail, Phone, MapPin, Globe } from 'lucide-react';
 import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
+import { getIcon } from '../utils/icons';
 
 function ModuleSection({ module }: { module: ResumeModule }) {
   const renderItem = () => {
@@ -121,6 +122,15 @@ export default function TemplateClassic({ data }: { data: ResumeData }) {
           {personalInfo.website && (
             <span className="flex items-center gap-1"><Globe size={12} /> {personalInfo.website}</span>
           )}
+          {personalInfo.customFields?.map((f) => {
+            if (!f.value) return null;
+            const Icon = getIcon(f.icon);
+            return (
+              <span key={f.id} className="flex items-center gap-1">
+                <Icon size={12} /> {f.label && `${f.label}: `}{f.value}
+              </span>
+            );
+          })}
         </div>
       </div>
 

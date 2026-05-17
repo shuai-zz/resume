@@ -1,6 +1,7 @@
 import { Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit2, FileText, Star } from 'lucide-react';
 import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
+import { getIcon } from '../utils/icons';
 
 const typeIcons: Record<ModuleType, any> = {
   experience: Briefcase,
@@ -138,6 +139,15 @@ export default function TemplateModern({ data }: { data: ResumeData }) {
           {personalInfo.website && (
             <span className="flex items-center gap-1"><Globe size={14} /> {personalInfo.website}</span>
           )}
+          {personalInfo.customFields?.map((f) => {
+            if (!f.value) return null;
+            const Icon = getIcon(f.icon);
+            return (
+              <span key={f.id} className="flex items-center gap-1">
+                <Icon size={14} /> {f.label && `${f.label}: `}{f.value}
+              </span>
+            );
+          })}
         </div>
       </div>
 

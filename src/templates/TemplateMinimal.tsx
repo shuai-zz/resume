@@ -118,6 +118,14 @@ export default function TemplateMinimal({ data }: { data: ResumeData }) {
           {personalInfo.phone && <span>{personalInfo.phone}</span>}
           {personalInfo.location && <span>{personalInfo.location}</span>}
           {personalInfo.website && <span>{personalInfo.website}</span>}
+          {personalInfo.customFields?.map((f) => {
+            if (!f.value) return null;
+            return (
+              <span key={f.id}>
+                {f.label && `${f.label}: `}{f.value}
+              </span>
+            );
+          })}
           </div>
         </div>
       </div>

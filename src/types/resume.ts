@@ -35,6 +35,13 @@ export interface SummaryItem {
   content: string;
 }
 
+export interface CustomField {
+  id: string;
+  icon: string;   // Lucide 图标名，从 utils/icons.ts 的 ICON_REGISTRY 选
+  label: string;  // 信息名称
+  value: string;  // 信息内容
+}
+
 export interface CustomItem {
   id: string;
   title: string;
@@ -67,6 +74,7 @@ export interface PersonalInfo {
   phone: string;
   location: string;
   website: string;
+  customFields: CustomField[];
 }
 
 // ============ 简历数据 ============
@@ -196,6 +204,10 @@ export const defaultResumeData: ResumeData = {
     phone: '138-0000-0000',
     location: '北京市',
     website: 'https://github.com/zhangsan',
+    customFields: [
+      { id: 'cf-1', icon: 'MessageCircle', label: '微信', value: '' },
+      { id: 'cf-2', icon: 'Cake', label: '生日', value: '' },
+    ],
   },
   modules: [
     { id: 'mod-summary', type: 'summary', title: '个人总结', items: JSON.parse(JSON.stringify(MODULE_CONFIGS.summary.defaultItems)) },

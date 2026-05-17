@@ -1,10 +1,14 @@
 import { ResumeData, ResumeModule, defaultResumeData, generateId } from '../types/resume';
 
-// 把任意旧版本（含 personalInfo.summary、skills 模块）的数据规整为当前版本。
+// 把任意旧版本（含 personalInfo.summary、skills 模块、缺 customFields 等）的数据规整为当前版本。
 // store 的 persist migrate 和 JSON 导入两条路径共用同一份逻辑，避免行为漂移。
 export function sanitizeResumeData(raw: any): ResumeData {
   const personalInfoRaw = raw?.personalInfo || {};
-  const { summary: _droppedSummary, ...personalInfo } = personalInfoRaw;
+  const { summary: _droppedSummary, ...personalInfoRest } = personalInfoRaw;
+
+  const customFields = Array.isArray(personalInfoRest.customFields)
+    ? personalInfoRest.customFields
+    : [];
 
   const rawModules: any[] = Array.isArray(raw?.modules) ? raw.modules : [];
   const modules: ResumeModule[] = rawModules.filter((m) => m && m.type !== 'skills');
@@ -22,7 +26,8 @@ export function sanitizeResumeData(raw: any): ResumeData {
   return {
     personalInfo: {
       ...defaultResumeData.personalInfo,
-      ...personalInfo,
+      ...personalInfoRest,
+      customFields,
     },
     modules,
     template: raw?.template || defaultResumeData.template,

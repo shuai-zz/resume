@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Plus, User, LayoutTemplate, ChevronDown, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { Plus, User, LayoutTemplate, ChevronDown, ChevronRight, Maximize2, Minimize2, Trash2 } from 'lucide-react';
 import { useResumeStore } from '../../stores/resumeStore';
 import { templates } from '../../templates';
-import { MODULE_CONFIGS, ModuleType } from '../../types/resume';
+import { MODULE_CONFIGS, ModuleType, CustomField, generateId } from '../../types/resume';
 import ModuleEditor from './ModuleEditor';
 import AvatarUpload from './AvatarUpload';
+import IconPicker from './IconPicker';
 
 export default function ResumeForm() {
   const store = useResumeStore();
@@ -33,6 +34,26 @@ export default function ResumeForm() {
     store.addModule(type, title);
     setShowAddMenu(false);
     setCustomTitle('');
+  };
+
+  // ====== 自定义信息字段操作 ======
+  const customFields = store.personalInfo.customFields ?? [];
+
+  const addCustomField = () => {
+    const newField: CustomField = { id: `cf-${generateId()}`, icon: 'User', label: '', value: '' };
+    store.updatePersonalInfo({ customFields: [...customFields, newField] });
+  };
+
+  const updateCustomField = (id: string, patch: Partial<CustomField>) => {
+    store.updatePersonalInfo({
+      customFields: customFields.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+    });
+  };
+
+  const removeCustomField = (id: string) => {
+    store.updatePersonalInfo({
+      customFields: customFields.filter((f) => f.id !== id),
+    });
   };
 
   const expandAll = () => {
@@ -166,6 +187,45 @@ export default function ResumeForm() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
+
+            {/* 自定义信息 */}
+            <div className="border-t border-gray-100 pt-3">
+              <label className="block text-xs text-gray-500 mb-2">自定义信息</label>
+              <div className="space-y-2">
+                {customFields.map((f) => (
+                  <div key={f.id} className="flex gap-2 items-start">
+                    <IconPicker icon={f.icon} onChange={(icon) => updateCustomField(f.id, { icon })} />
+                    <input
+                      type="text"
+                      value={f.label}
+                      onChange={(e) => updateCustomField(f.id, { label: e.target.value })}
+                      placeholder="名称（如 微信）"
+                      className="flex-1 min-w-0 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      value={f.value}
+                      onChange={(e) => updateCustomField(f.id, { value: e.target.value })}
+                      placeholder="内容"
+                      className="flex-1 min-w-0 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => removeCustomField(f.id)}
+                      className="text-gray-400 hover:text-red-600 p-1.5"
+                      title="删除"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={addCustomField}
+                className="flex items-center gap-1 mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium w-full justify-center py-1.5 border border-dashed border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                <Plus size={14} /> 添加自定义信息
+              </button>
             </div>
           </div>
         )}
