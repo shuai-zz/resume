@@ -37,11 +37,13 @@ src/
 ├── index.css                    # 全局样式 + Markdown 样式 + 打印样式
 ├── components/
 │   ├── Editor/
-│   │   ├── ResumeForm.tsx       # 左侧编辑器主面板（模板选择 + 个人信息 + 模块列表 + 添加模块）
-│   │   ├── ModuleEditor.tsx     # 单个模块编辑器（标题编辑 + 条目增删改 + 拖拽排序）
-│   │   └── AvatarUpload.tsx     # 头像上传组件（点击/拖拽上传 + 删除）
+│   │   ├── ResumeForm.tsx       # 左侧编辑器主面板（模板选择 + 个人信息 + 自定义字段 + 模块列表）
+│   │   ├── ModuleEditor.tsx     # 单个模块编辑器（标题编辑 + 条目增删改 + 拖拽排序 + 时间倒序 toggle）
+│   │   ├── AvatarUpload.tsx     # 头像上传组件（点击/拖拽上传 + 删除）
+│   │   ├── IconPicker.tsx       # 自定义字段图标选择器（curated 24 个 lucide 图标 popover）
+│   │   └── DateInput.tsx        # 月份选择器 + 可选「至今」复选框
 │   └── Preview/
-│       └── ResumePreview.tsx    # 右侧预览容器
+│       └── ResumePreview.tsx    # 右侧预览容器（应用 sortByDateDesc 后再传给模板）
 ├── templates/
 │   ├── index.ts                 # 模板注册表
 │   ├── TemplateModern.tsx       # 现代风格（蓝色头部 + 图标分隔）
@@ -49,9 +51,11 @@ src/
 │   └── TemplateMinimal.tsx      # 极简风格（双栏布局）
 └── utils/
     ├── exportPdf.ts             # PDF 导出（DOM → canvas → PDF）
-    ├── exportWord.ts            # Word 导出（docx.js 程序化生成）
-    ├── importExport.ts          # JSON 导入/导出（本地文件持久化）
-    └── markdown.tsx             # Markdown 渲染组件
+    ├── exportWord.ts            # Word 导出（docx.js 程序化生成，应用 sortByDateDesc）
+    ├── importExport.ts          # JSON 导入/导出 + sanitizeResumeData（migrate + import 共用）
+    ├── markdown.tsx             # Markdown 渲染组件
+    ├── icons.ts                 # Lucide 图标注册表 + getIcon() fallback（24 个 curated）
+    └── sortItems.ts             # 按时间倒序排序工具（endDate desc → startDate desc）
 ```
 
 ---
@@ -61,26 +65,38 @@ src/
 ### 个人信息（PersonalInfo）
 
 ```ts
+interface CustomField {
+  id: string;
+  icon: string;         // Lucide 图标名，从 utils/icons.ts 的 ICON_REGISTRY 选
+  label: string;        // 信息名称（如「微信」「生日」）
+  value: string;        // 信息内容；为空时模板不渲染该条
+}
+
 interface PersonalInfo {
-  name: string;        // 姓名
-  title: string;       // 职位头衔
-  avatar: string;      // 头像 base64
+  name: string;         // 姓名
+  title: string;        // 职位头衔
+  avatar: string;       // 头像 base64
   email: string;
   phone: string;
-  location: string;    // 城市
-  website: string;     // 个人网站/GitHub
-  summary: string;     // 个人简介（支持 Markdown）
+  location: string;     // 城市
+  website: string;      // 个人网站/GitHub
+  customFields: CustomField[];  // 自定义联系字段，header 联系信息行混排
 }
 ```
+
+**注**：原 `personalInfo.summary` 字段已废弃。「个人总结」现在是一个独立的 `summary` 类型模块（单 markdown textarea），由 `modules` 数组承载，可以参与排序、重命名、删除。
 
 ### 模块系统（核心抽象）
 
 ```ts
+type ModuleType = 'experience' | 'education' | 'projects' | 'summary' | 'custom';
+
 interface ResumeModule {
   id: string;
-  type: 'experience' | 'education' | 'projects' | 'skills' | 'custom';
-  title: string;       // 可自定义重命名
-  items: ModuleItem[]; // 模块内的条目列表
+  type: ModuleType;
+  title: string;        // 可自定义重命名
+  items: ModuleItem[];  // 模块内的条目列表
+  sortByDateDesc?: boolean;  // 开启后编辑器和预览实时按 endDate desc → startDate desc 排序；store 内 items 顺序不变
 }
 
 interface ResumeData {
@@ -89,6 +105,11 @@ interface ResumeData {
   template: 'modern' | 'classic' | 'minimal';
 }
 ```
+
+**注**：
+- `'summary'` 模块约定恰好 1 个 item（绑定 markdown textarea），`ModuleEditor` 走特殊渲染分支不显示「添加条目」
+- 原 `'skills'` 类型已移除，相关内容合并入「个人总结」
+- `sortByDateDesc` 是渲染层选项，不会动 store；开启时拖拽 handle 自动禁用避免冲突
 
 ### 模块配置（MODULE_CONFIGS）
 
@@ -105,6 +126,12 @@ interface ResumeData {
 
 Store 用 `zustand/middleware` 的 `persist` 包过，数据自动同步到 `localStorage["resume-builder-data"]`；只持久化 `personalInfo / modules / template` 三个数据字段，不持久化 action。
 
+**持久化版本**：当前 `version: 4`。从任意旧版本（v1/v2/v3）迁移都委托 `sanitizeResumeData()`（`src/utils/importExport.ts`），同一份逻辑同时给 store migrate 和 JSON 导入用，避免行为漂移。Sanitize 会：
+- 删除已废弃的 `personalInfo.summary` 字段
+- 滤掉 `skills` 类型模块
+- 缺 `summary` 模块时自动 unshift 一个
+- `customFields` / `sortByDateDesc` 缺字段时兜底默认值
+
 Store 提供以下操作：
 
 ```ts
@@ -118,16 +145,17 @@ setTemplate(template: TemplateType)
 loadData(data: ResumeData)
 
 // 模块管理
-addModule(type, title?)      // 添加新模块（清空默认条目）
-removeModule(moduleId)        // 删除模块
-updateModuleTitle(moduleId, title)  // 重命名模块
+addModule(type, title?)             // summary 类型自动带 1 个空 item，其他类型清空让用户自填
+removeModule(moduleId)
+updateModuleTitle(moduleId, title)
+toggleModuleSort(moduleId)          // 翻转 sortByDateDesc
 moveModule(fromIndex, toIndex)      // 拖拽排序模块
 
 // 条目管理
-addItem(moduleId)             // 在指定模块中添加空条目
-removeItem(moduleId, itemId)  // 删除条目
-updateItem(moduleId, itemId, data)  // 更新条目字段
-reorderItem(moduleId, fromIndex, toIndex)  // 拖拽排序条目
+addItem(moduleId)
+removeItem(moduleId, itemId)
+updateItem(moduleId, itemId, data)
+reorderItem(moduleId, fromIndex, toIndex)
 ```
 
 ---
@@ -201,10 +229,14 @@ export const templates = {
 
 ### 字段类型
 
-`itemFields` 支持三种类型：
+`itemFields[].type` 支持以下类型：
 - `'text'`（默认）：普通文本输入框
 - `'textarea'`：多行文本（自动占满整行）
-- `'select'`：下拉选择（目前仅 `skills` 的 `level` 字段使用）
+- `'select'`：下拉选择
+- `'month'`：原生 `<input type="month">` 月份选择器（输出 `YYYY-MM`）
+- `'month-or-present'`：月份选择器 + 「至今」复选框；勾上时把值存为字符串 `"至今"` 并禁用日期输入框
+
+排序工具 `sortItemsByDateDesc()`（`src/utils/sortItems.ts`）把 `"至今"` 和空字符串都视为 `Infinity`（最新，排最前）。
 
 ---
 
