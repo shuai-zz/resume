@@ -185,18 +185,66 @@ export async function exportToPdf(elementId: string, filename: string = '简历.
   // 切点用「下一个模块的顶部」而不是「当前模块的底部」：
   // 模块底部刚好贴着最后一行文字下沿，硬切会切穿字母 descender；
   // 而模块之间天然有 mb-* 的 margin 空隙（16-24px），切在那里有缓冲。
+  //
+  // 双栏布局（如 Minimal 模板）下 .a4-page 直接子元素里有一个
+  // flex 容器把左右两栏并排放，整块若超过一页就会被推到下一页。
+  // 这里递归进双栏容器，把每一列里的模块顶部也算入候选切点，
+  // 再用「跨列安全检查」（Y 不在任何一列的某个模块内部）过滤掉不安全的切点。
   const a4Page = element.querySelector('.a4-page') as HTMLElement | null;
   const breakYsCssPx: number[] = [];
   if (a4Page) {
     const pageTop = a4Page.getBoundingClientRect().top;
-    const children = Array.from(a4Page.children);
-    // 跳过第 0 个：切在头部顶部 = 空页，没意义
-    for (let i = 1; i < children.length; i++) {
-      const rect = (children[i] as HTMLElement).getBoundingClientRect();
-      breakYsCssPx.push(rect.top - pageTop);
-    }
-    // 最后一个切点 = 全页底部（含 padding-bottom）
-    breakYsCssPx.push(a4Page.scrollHeight);
+    type Mod = { top: number; bottom: number };
+    const modulesPerColumn: Mod[][] = [];
+    const candidates = new Set<number>();
+
+    // 双栏容器判定：display:flex（非 column）+ 至少 2 个 div 子元素，
+    // 每个子元素都还有自己的子元素（避免把 header 这种「flex 内嵌 avatar+info」误判）。
+    const isColumnContainer = (el: HTMLElement): boolean => {
+      const cs = window.getComputedStyle(el);
+      if (!cs.display.includes('flex')) return false;
+      if (cs.flexDirection === 'column') return false;
+      const cols = Array.from(el.children) as HTMLElement[];
+      if (cols.length < 2) return false;
+      return cols.every((c) => c.tagName === 'DIV' && c.children.length >= 1);
+    };
+
+    const collectColumn = (colEl: HTMLElement) => {
+      const mods: Mod[] = [];
+      Array.from(colEl.children).forEach((child) => {
+        const r = (child as HTMLElement).getBoundingClientRect();
+        const top = r.top - pageTop;
+        const bottom = r.bottom - pageTop;
+        mods.push({ top, bottom });
+        candidates.add(top);
+      });
+      if (mods.length > 0) modulesPerColumn.push(mods);
+    };
+
+    Array.from(a4Page.children).forEach((child) => {
+      const el = child as HTMLElement;
+      if (isColumnContainer(el)) {
+        Array.from(el.children).forEach((col) => collectColumn(col as HTMLElement));
+      } else {
+        const r = el.getBoundingClientRect();
+        const top = r.top - pageTop;
+        const bottom = r.bottom - pageTop;
+        modulesPerColumn.push([{ top, bottom }]);
+        candidates.add(top);
+      }
+    });
+
+    candidates.add(a4Page.scrollHeight);
+
+    // 安全 Y：在每一栏里 Y 都不在某个模块的「内部」（顶/底边界 1px 容差）
+    const isSafe = (y: number) =>
+      modulesPerColumn.every((col) =>
+        col.every((m) => !(y > m.top + 1 && y < m.bottom - 1))
+      );
+
+    [...candidates].forEach((y) => {
+      if (y > 0 && isSafe(y)) breakYsCssPx.push(y);
+    });
   }
 
   const canvas = await html2canvas(element, {
