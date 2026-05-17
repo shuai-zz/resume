@@ -30,10 +30,9 @@ export interface ProjectItem {
   link: string;
 }
 
-export interface SkillItem {
+export interface SummaryItem {
   id: string;
-  name: string;
-  level: string;
+  content: string;
 }
 
 export interface CustomItem {
@@ -45,11 +44,11 @@ export interface CustomItem {
   description: string;
 }
 
-export type ModuleItem = ExperienceItem | EducationItem | ProjectItem | SkillItem | CustomItem;
+export type ModuleItem = ExperienceItem | EducationItem | ProjectItem | SummaryItem | CustomItem;
 
 // ============ 模块类型 ============
 
-export type ModuleType = 'experience' | 'education' | 'projects' | 'skills' | 'custom';
+export type ModuleType = 'experience' | 'education' | 'projects' | 'summary' | 'custom';
 
 export interface ResumeModule {
   id: string;
@@ -68,7 +67,6 @@ export interface PersonalInfo {
   phone: string;
   location: string;
   website: string;
-  summary: string;
 }
 
 // ============ 简历数据 ============
@@ -160,19 +158,17 @@ export const MODULE_CONFIGS: Record<ModuleType, ModuleConfig> = {
       { key: 'description', label: '项目描述', placeholder: '项目描述', type: 'textarea' },
     ],
   },
-  skills: {
-    type: 'skills',
-    defaultTitle: '专业技能',
+  summary: {
+    type: 'summary',
+    defaultTitle: '个人总结',
     defaultItems: [
-      { id: 'sk-1', name: 'React / Vue / Angular', level: '精通' },
-      { id: 'sk-2', name: 'TypeScript / JavaScript', level: '精通' },
-      { id: 'sk-3', name: 'Node.js / Express', level: '熟练' },
-      { id: 'sk-4', name: 'Webpack / Vite', level: '熟练' },
-      { id: 'sk-5', name: 'Git / CI/CD', level: '熟练' },
+      {
+        id: 'sum-1',
+        content: '拥有 5 年前端开发经验，精通 React / Vue 等主流框架，擅长性能优化和工程化建设。\n\n**核心技能**：\n- React / Vue / Angular\n- TypeScript / JavaScript\n- Node.js / Vite / Webpack',
+      },
     ],
     itemFields: [
-      { key: 'name', label: '技能名称', placeholder: '技能名称' },
-      { key: 'level', label: '熟练程度', placeholder: '熟练程度', type: 'select' },
+      { key: 'content', label: '内容（支持 Markdown）', placeholder: '使用 Markdown 语法：- 列表、**粗体**、## 标题', type: 'textarea' },
     ],
   },
   custom: {
@@ -200,13 +196,12 @@ export const defaultResumeData: ResumeData = {
     phone: '138-0000-0000',
     location: '北京市',
     website: 'https://github.com/zhangsan',
-    summary: '拥有5年前端开发经验，精通React、Vue等主流框架，擅长性能优化和工程化建设。具备良好的团队协作能力和技术领导力。',
   },
   modules: [
+    { id: 'mod-summary', type: 'summary', title: '个人总结', items: JSON.parse(JSON.stringify(MODULE_CONFIGS.summary.defaultItems)) },
     { id: 'mod-exp', type: 'experience', title: '工作经历', items: MODULE_CONFIGS.experience.defaultItems },
     { id: 'mod-edu', type: 'education', title: '教育背景', items: MODULE_CONFIGS.education.defaultItems },
     { id: 'mod-proj', type: 'projects', title: '项目经历', items: MODULE_CONFIGS.projects.defaultItems },
-    { id: 'mod-skills', type: 'skills', title: '专业技能', items: MODULE_CONFIGS.skills.defaultItems },
   ],
   template: 'modern',
 };
@@ -236,8 +231,8 @@ export function createEmptyItem(type: ModuleType): ModuleItem {
       return { ...base, school: '', degree: '', field: '', ranking: '', startDate: '', endDate: '', description: '' } as EducationItem;
     case 'projects':
       return { ...base, name: '', role: '', startDate: '', endDate: '', description: '', link: '' } as ProjectItem;
-    case 'skills':
-      return { ...base, name: '', level: '熟练' } as SkillItem;
+    case 'summary':
+      return { ...base, content: '' } as SummaryItem;
     case 'custom':
       return { ...base, title: '', subtitle: '', startDate: '', endDate: '', description: '' } as CustomItem;
     default:

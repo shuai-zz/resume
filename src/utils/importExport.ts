@@ -1,4 +1,33 @@
-import { ResumeData } from '../types/resume';
+import { ResumeData, ResumeModule, defaultResumeData, generateId } from '../types/resume';
+
+// 把任意旧版本（含 personalInfo.summary、skills 模块）的数据规整为当前版本。
+// store 的 persist migrate 和 JSON 导入两条路径共用同一份逻辑，避免行为漂移。
+export function sanitizeResumeData(raw: any): ResumeData {
+  const personalInfoRaw = raw?.personalInfo || {};
+  const { summary: _droppedSummary, ...personalInfo } = personalInfoRaw;
+
+  const rawModules: any[] = Array.isArray(raw?.modules) ? raw.modules : [];
+  const modules: ResumeModule[] = rawModules.filter((m) => m && m.type !== 'skills');
+
+  const hasSummary = modules.some((m) => m.type === 'summary');
+  if (!hasSummary) {
+    modules.unshift({
+      id: `mod-summary-${generateId()}`,
+      type: 'summary',
+      title: '个人总结',
+      items: [{ id: `sum-${generateId()}`, content: '' } as any],
+    });
+  }
+
+  return {
+    personalInfo: {
+      ...defaultResumeData.personalInfo,
+      ...personalInfo,
+    },
+    modules,
+    template: raw?.template || defaultResumeData.template,
+  };
+}
 
 export function exportResume(data: ResumeData, filename?: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -17,13 +46,12 @@ export function importResume(file: File): Promise<ResumeData> {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string);
-        // 简单校验数据结构
-        if (!data.personalInfo || !Array.isArray(data.modules)) {
+        const raw = JSON.parse(e.target?.result as string);
+        if (!raw.personalInfo || !Array.isArray(raw.modules)) {
           reject(new Error('无效的简历文件格式'));
           return;
         }
-        resolve(data as ResumeData);
+        resolve(sanitizeResumeData(raw));
       } catch (err) {
         reject(new Error('解析文件失败，请检查是否为有效的 JSON 文件'));
       }

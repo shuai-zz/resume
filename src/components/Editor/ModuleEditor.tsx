@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GripVertical, Plus, Trash2, ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { useResumeStore } from '../../stores/resumeStore';
-import { ResumeModule, MODULE_CONFIGS } from '../../types/resume';
+import { ResumeModule, MODULE_CONFIGS, SummaryItem } from '../../types/resume';
 
 interface ModuleEditorProps {
   module: ResumeModule;
@@ -25,6 +25,13 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
       setExpanded(expandSignal.expand);
     }
   }, [expandSignal]);
+
+  // summary 模块要求 items[] 至少有 1 个 item 绑定 textarea；防御性兜底
+  useEffect(() => {
+    if (module.type === 'summary' && module.items.length === 0) {
+      store.addItem(module.id);
+    }
+  }, [module.type, module.id, module.items.length, store]);
 
   const config = MODULE_CONFIGS[module.type];
 
@@ -158,6 +165,22 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
 
       {/* Module Content */}
       {expanded && (
+        module.type === 'summary' ? (
+          <div className="p-4">
+            <textarea
+              value={(module.items[0] as SummaryItem | undefined)?.content || ''}
+              onChange={(e) => {
+                const first = module.items[0];
+                if (first) {
+                  store.updateItem(module.id, first.id, { content: e.target.value } as Partial<SummaryItem>);
+                }
+              }}
+              rows={8}
+              placeholder="使用 Markdown 语法：- 列表、**粗体**、## 标题、`代码`"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
+            />
+          </div>
+        ) : (
         <div className="p-4 space-y-3">
           {module.items.map((item, itemIndex) => (
             <div
@@ -199,6 +222,7 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
             <Plus size={16} /> 添加条目
           </button>
         </div>
+        )
       )}
     </div>
   );

@@ -167,16 +167,6 @@ export default function ResumeForm() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">个人简介（支持 Markdown）</label>
-              <textarea
-                value={store.personalInfo.summary}
-                onChange={(e) => store.updatePersonalInfo({ summary: e.target.value })}
-                rows={4}
-                placeholder="支持 Markdown 语法：- 无序列表、1. 有序列表、**粗体**、*斜体*"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
           </div>
         )}
       </div>

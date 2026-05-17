@@ -1,13 +1,13 @@
-import { Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit2, Wrench, Star, FileText } from 'lucide-react';
-import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SkillItem, CustomItem } from '../types/resume';
+import { Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit2, FileText, Star } from 'lucide-react';
+import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
 
 const typeIcons: Record<ModuleType, any> = {
   experience: Briefcase,
   education: GraduationCap,
   projects: FolderGit2,
-  skills: Wrench,
-  custom: FileText,
+  summary: FileText,
+  custom: Star,
 };
 
 function ModuleSection({ module }: { module: ResumeModule }) {
@@ -63,18 +63,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
           );
         });
 
-      case 'skills':
+      case 'summary':
         return (
-          <div className="flex flex-wrap gap-2">
-            {module.items.map((item) => {
-              const skill = item as SkillItem;
-              return (
-                <span key={item.id} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                  {skill.name} {skill.level && `· ${skill.level}`}
-                </span>
-              );
-            })}
-          </div>
+          <MarkdownContent
+            text={(module.items[0] as SummaryItem | undefined)?.content || ''}
+            className="text-gray-700 leading-relaxed"
+          />
         );
 
       case 'custom':
@@ -98,6 +92,7 @@ function ModuleSection({ module }: { module: ResumeModule }) {
   };
 
   if (module.items.length === 0) return null;
+  if (module.type === 'summary' && !(module.items[0] as SummaryItem)?.content?.trim()) return null;
 
   return (
     <div className="mb-6">
@@ -145,13 +140,6 @@ export default function TemplateModern({ data }: { data: ResumeData }) {
           )}
         </div>
       </div>
-
-      {/* Summary */}
-      {personalInfo.summary && (
-        <div className="mb-6">
-          <MarkdownContent text={personalInfo.summary} className="text-gray-700 leading-relaxed" />
-        </div>
-      )}
 
       {/* Modules */}
       {modules.map((module) => (

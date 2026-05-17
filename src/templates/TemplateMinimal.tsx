@@ -1,8 +1,8 @@
-import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SkillItem, CustomItem } from '../types/resume';
+import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
 
 const leftTypes: ModuleType[] = ['experience', 'projects', 'custom'];
-const rightTypes: ModuleType[] = ['education', 'skills'];
+const rightTypes: ModuleType[] = ['education'];
 
 function ModuleSection({ module }: { module: ResumeModule }) {
   const renderItem = () => {
@@ -46,18 +46,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
           );
         });
 
-      case 'skills':
+      case 'summary':
         return (
-          <div className="space-y-1">
-            {module.items.map((item) => {
-              const skill = item as SkillItem;
-              return (
-                <div key={item.id} className="text-gray-700 text-sm">
-                  {skill.name}
-                </div>
-              );
-            })}
-          </div>
+          <MarkdownContent
+            text={(module.items[0] as SummaryItem | undefined)?.content || ''}
+            className="text-gray-600 leading-relaxed"
+          />
         );
 
       case 'custom':
@@ -78,6 +72,7 @@ function ModuleSection({ module }: { module: ResumeModule }) {
   };
 
   if (module.items.length === 0) return null;
+  if (module.type === 'summary' && !(module.items[0] as SummaryItem)?.content?.trim()) return null;
 
   return (
     <div className="mb-6">
@@ -90,11 +85,19 @@ function ModuleSection({ module }: { module: ResumeModule }) {
 export default function TemplateMinimal({ data }: { data: ResumeData }) {
   const { personalInfo, modules } = data;
 
+  const summaryModules = modules.filter(
+    (m) => m.type === 'summary' && (m.items[0] as SummaryItem | undefined)?.content?.trim()
+  );
   const leftModules = modules.filter((m) => leftTypes.includes(m.type) && m.items.length > 0);
   const rightModules = modules.filter((m) => rightTypes.includes(m.type) && m.items.length > 0);
-
-  // Custom modules default to left column
-  const otherModules = modules.filter((m) => !leftTypes.includes(m.type) && !rightTypes.includes(m.type) && m.items.length > 0);
+  // 其他类型（非 summary / 非 left / 非 right）默认进左栏
+  const otherModules = modules.filter(
+    (m) =>
+      m.type !== 'summary' &&
+      !leftTypes.includes(m.type) &&
+      !rightTypes.includes(m.type) &&
+      m.items.length > 0
+  );
 
   return (
     <div className="a4-page p-10 text-sm">
@@ -119,12 +122,10 @@ export default function TemplateMinimal({ data }: { data: ResumeData }) {
         </div>
       </div>
 
-      {/* Summary */}
-      {personalInfo.summary && (
-        <div className="mb-6">
-          <MarkdownContent text={personalInfo.summary} className="text-gray-600 leading-relaxed" />
-        </div>
-      )}
+      {/* Summary (全宽顶部区) */}
+      {summaryModules.map((module) => (
+        <ModuleSection key={module.id} module={module} />
+      ))}
 
       {/* Two Column Layout */}
       <div className="flex gap-8">

@@ -10,6 +10,7 @@ import {
   createEmptyItem,
   createModule,
 } from '../types/resume';
+import { sanitizeResumeData } from '../utils/importExport';
 
 interface ResumeStore extends ResumeData {
   // Personal Info
@@ -51,8 +52,8 @@ export const useResumeStore = create<ResumeStore>()(
       addModule: (type, title) =>
         set((state) => {
           const newModule = createModule(type, title);
-          // 清空默认数据，让用户自己填
-          newModule.items = [];
+          // summary 模块需要至少一个 item 绑定 textarea；其他模块清空让用户自己填
+          newModule.items = type === 'summary' ? [createEmptyItem('summary')] : [];
           return { modules: [...state.modules, newModule] };
         }),
 
@@ -118,8 +119,10 @@ export const useResumeStore = create<ResumeStore>()(
     }),
     {
       name: 'resume-builder-data',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      // v1 → v2: 删 personalInfo.summary、滤掉 skills 模块、保证头部有 summary 模块
+      migrate: (persistedState: any, _fromVersion) => sanitizeResumeData(persistedState),
       // 只持久化数据，不持久化 action（action 在每次启动时由 create 重新挂上）
       partialize: (state) => ({
         personalInfo: state.personalInfo,

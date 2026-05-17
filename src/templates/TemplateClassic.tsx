@@ -1,5 +1,5 @@
 import { Mail, Phone, MapPin, Globe } from 'lucide-react';
-import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SkillItem, CustomItem } from '../types/resume';
+import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
 
 function ModuleSection({ module }: { module: ResumeModule }) {
@@ -53,19 +53,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
           );
         });
 
-      case 'skills':
+      case 'summary':
         return (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            {module.items.map((item) => {
-              const skill = item as SkillItem;
-              return (
-                <div key={item.id} className="flex justify-between text-gray-700">
-                  <span>{skill.name}</span>
-                  <span className="text-gray-500 text-xs">{skill.level}</span>
-                </div>
-              );
-            })}
-          </div>
+          <MarkdownContent
+            text={(module.items[0] as SummaryItem | undefined)?.content || ''}
+            className="text-gray-700 leading-relaxed text-justify"
+          />
         );
 
       case 'custom':
@@ -89,6 +82,7 @@ function ModuleSection({ module }: { module: ResumeModule }) {
   };
 
   if (module.items.length === 0) return null;
+  if (module.type === 'summary' && !(module.items[0] as SummaryItem)?.content?.trim()) return null;
 
   return (
     <div className="mb-5">
@@ -129,14 +123,6 @@ export default function TemplateClassic({ data }: { data: ResumeData }) {
           )}
         </div>
       </div>
-
-      {/* Summary */}
-      {personalInfo.summary && (
-        <div className="mb-5">
-          <h2 className="text-sm font-bold text-gray-900 uppercase border-b border-gray-300 mb-2 pb-1">个人简介</h2>
-          <MarkdownContent text={personalInfo.summary} className="text-gray-700 leading-relaxed text-justify" />
-        </div>
-      )}
 
       {/* Modules */}
       {modules.map((module) => (

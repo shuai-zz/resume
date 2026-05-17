@@ -3,7 +3,7 @@ import {
   Packer, BorderStyle
 } from 'docx';
 import { saveAs } from 'file-saver';
-import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SkillItem, CustomItem } from '../types/resume';
+import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 
 function createSectionTitle(title: string): Paragraph {
   return new Paragraph({
@@ -99,18 +99,24 @@ function renderModule(module: ResumeModule): Paragraph[] {
       });
       break;
 
-    case 'skills':
+    case 'summary':
       module.items.forEach((item) => {
-        const skill = item as SkillItem;
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: `• ${skill.name}`, size: 22 }),
-              skill.level ? new TextRun({ text: ` — ${skill.level}`, size: 22, color: '666666' }) : new TextRun(''),
-            ],
-            spacing: { after: 40 },
-          })
-        );
+        const sum = item as SummaryItem;
+        if (!sum.content) return;
+        // 按空行拆段，每段保留行内换行（Word 用 \n 不会自动换行，需要 break）
+        sum.content.split(/\n\s*\n/).forEach((para) => {
+          if (!para.trim()) return;
+          const lines = para.split('\n');
+          children.push(
+            new Paragraph({
+              children: lines.flatMap((line, i) => {
+                const run = new TextRun({ text: line, size: 22, break: i === 0 ? undefined : 1 });
+                return [run];
+              }),
+              spacing: { after: 120 },
+            })
+          );
+        });
       });
       break;
 
@@ -189,17 +195,6 @@ export async function exportToWord(data: ResumeData, filename: string = '简历.
             size: 6,
           },
         },
-      })
-    );
-  }
-
-  // Summary
-  if (personalInfo.summary) {
-    children.push(
-      createSectionTitle('个人简介'),
-      new Paragraph({
-        children: [new TextRun({ text: personalInfo.summary, size: 22 })],
-        spacing: { after: 200 },
       })
     );
   }
