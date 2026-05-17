@@ -4,6 +4,7 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
+import { sortItemsByDateDesc } from './sortItems';
 
 function createSectionTitle(title: string): Paragraph {
   return new Paragraph({
@@ -202,8 +203,11 @@ export async function exportToWord(data: ResumeData, filename: string = '简历.
     );
   }
 
-  // Modules
-  modules.forEach((module) => {
+  // Modules（应用排序：开启 sortByDateDesc 的模块 items 按 endDate desc → startDate desc）
+  const displayModules = modules.map((module) =>
+    module.sortByDateDesc ? { ...module, items: sortItemsByDateDesc(module.items, module.type) } : module
+  );
+  displayModules.forEach((module) => {
     if (module.items.length > 0) {
       children.push(...renderModule(module));
     }

@@ -62,6 +62,8 @@ export interface ResumeModule {
   type: ModuleType;
   title: string;
   items: ModuleItem[];
+  // 开启后编辑器和预览都按 endDate desc → startDate desc 实时排序；store 内 items 顺序不变
+  sortByDateDesc?: boolean;
 }
 
 // ============ 个人信息 ============
@@ -93,7 +95,7 @@ export interface ModuleConfig {
   type: ModuleType;
   defaultTitle: string;
   defaultItems: ModuleItem[];
-  itemFields: { key: string; label: string; placeholder: string; type?: 'text' | 'textarea' | 'select' }[];
+  itemFields: { key: string; label: string; placeholder: string; type?: 'text' | 'textarea' | 'select' | 'month' | 'month-or-present' }[];
   gridCols?: number; // 表单布局列数
 }
 
@@ -114,8 +116,8 @@ export const MODULE_CONFIGS: Record<ModuleType, ModuleConfig> = {
     itemFields: [
       { key: 'company', label: '公司名称', placeholder: '公司名称' },
       { key: 'position', label: '职位', placeholder: '职位' },
-      { key: 'startDate', label: '开始时间', placeholder: '开始时间' },
-      { key: 'endDate', label: '结束时间', placeholder: '结束时间' },
+      { key: 'startDate', label: '开始时间', placeholder: '开始时间', type: 'month' },
+      { key: 'endDate', label: '结束时间', placeholder: '结束时间', type: 'month-or-present' },
       { key: 'description', label: '工作描述', placeholder: '工作描述', type: 'textarea' },
     ],
   },
@@ -139,8 +141,8 @@ export const MODULE_CONFIGS: Record<ModuleType, ModuleConfig> = {
       { key: 'field', label: '专业', placeholder: '专业' },
       { key: 'degree', label: '学位', placeholder: '学位' },
       { key: 'ranking', label: '学校层次', placeholder: '如：985 / 211 / 双一流 / QS Top 50' },
-      { key: 'startDate', label: '开始时间', placeholder: '开始时间' },
-      { key: 'endDate', label: '结束时间', placeholder: '结束时间' },
+      { key: 'startDate', label: '开始时间', placeholder: '开始时间', type: 'month' },
+      { key: 'endDate', label: '结束时间', placeholder: '结束时间', type: 'month-or-present' },
       { key: 'description', label: '描述', placeholder: '描述（可选）', type: 'textarea' },
     ],
   },
@@ -161,8 +163,8 @@ export const MODULE_CONFIGS: Record<ModuleType, ModuleConfig> = {
     itemFields: [
       { key: 'name', label: '项目名称', placeholder: '项目名称' },
       { key: 'role', label: '角色', placeholder: '角色' },
-      { key: 'startDate', label: '开始时间', placeholder: '开始时间' },
-      { key: 'endDate', label: '结束时间', placeholder: '结束时间' },
+      { key: 'startDate', label: '开始时间', placeholder: '开始时间', type: 'month' },
+      { key: 'endDate', label: '结束时间', placeholder: '结束时间', type: 'month-or-present' },
       { key: 'description', label: '项目描述', placeholder: '项目描述', type: 'textarea' },
     ],
   },
@@ -186,8 +188,8 @@ export const MODULE_CONFIGS: Record<ModuleType, ModuleConfig> = {
     itemFields: [
       { key: 'title', label: '标题', placeholder: '标题' },
       { key: 'subtitle', label: '副标题', placeholder: '副标题' },
-      { key: 'startDate', label: '开始时间', placeholder: '开始时间' },
-      { key: 'endDate', label: '结束时间', placeholder: '结束时间' },
+      { key: 'startDate', label: '开始时间', placeholder: '开始时间', type: 'month' },
+      { key: 'endDate', label: '结束时间', placeholder: '结束时间', type: 'month-or-present' },
       { key: 'description', label: '描述', placeholder: '描述', type: 'textarea' },
     ],
   },

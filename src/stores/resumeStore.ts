@@ -26,6 +26,7 @@ interface ResumeStore extends ResumeData {
   addModule: (type: ModuleType, title?: string) => void;
   removeModule: (moduleId: string) => void;
   updateModuleTitle: (moduleId: string, title: string) => void;
+  toggleModuleSort: (moduleId: string) => void;
   moveModule: (fromIndex: number, toIndex: number) => void;
 
   // Item management
@@ -65,6 +66,13 @@ export const useResumeStore = create<ResumeStore>()(
       updateModuleTitle: (moduleId, title) =>
         set((state) => ({
           modules: state.modules.map((m) => (m.id === moduleId ? { ...m, title } : m)),
+        })),
+
+      toggleModuleSort: (moduleId) =>
+        set((state) => ({
+          modules: state.modules.map((m) =>
+            m.id === moduleId ? { ...m, sortByDateDesc: !m.sortByDateDesc } : m
+          ),
         })),
 
       moveModule: (fromIndex, toIndex) =>
@@ -119,9 +127,9 @@ export const useResumeStore = create<ResumeStore>()(
     }),
     {
       name: 'resume-builder-data',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
-      // 旧版本 → 当前：删 personalInfo.summary、滤掉 skills 模块、补 summary 模块、补 customFields
+      // 旧版本 → 当前：删 personalInfo.summary、滤掉 skills 模块、补 summary 模块、补 customFields、补 sortByDateDesc
       migrate: (persistedState: any, _fromVersion) => sanitizeResumeData(persistedState),
       // 只持久化数据，不持久化 action（action 在每次启动时由 create 重新挂上）
       partialize: (state) => ({

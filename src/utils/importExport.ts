@@ -11,7 +11,9 @@ export function sanitizeResumeData(raw: any): ResumeData {
     : [];
 
   const rawModules: any[] = Array.isArray(raw?.modules) ? raw.modules : [];
-  const modules: ResumeModule[] = rawModules.filter((m) => m && m.type !== 'skills');
+  const modules: ResumeModule[] = rawModules
+    .filter((m) => m && m.type !== 'skills')
+    .map((m) => ({ ...m, sortByDateDesc: m.sortByDateDesc === true }));
 
   const hasSummary = modules.some((m) => m.type === 'summary');
   if (!hasSummary) {

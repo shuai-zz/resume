@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { GripVertical, Plus, Trash2, ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react';
+import { GripVertical, Plus, Trash2, ChevronDown, ChevronRight, Pencil, Check, X, ArrowDownWideNarrow } from 'lucide-react';
 import { useResumeStore } from '../../stores/resumeStore';
-import { ResumeModule, MODULE_CONFIGS, SummaryItem } from '../../types/resume';
+import { ResumeModule, MODULE_CONFIGS, SummaryItem, ModuleType } from '../../types/resume';
+import { sortItemsByDateDesc } from '../../utils/sortItems';
+import DateInput from './DateInput';
+
+const SORTABLE_TYPES: ModuleType[] = ['experience', 'education', 'projects', 'custom'];
 
 interface ModuleEditorProps {
   module: ResumeModule;
@@ -63,6 +67,25 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
 
   const renderField = (item: any, field: any) => {
     const value = item[field.key] || '';
+
+    if (field.type === 'month') {
+      return (
+        <DateInput
+          value={value}
+          onChange={(v) => store.updateItem(module.id, item.id, { [field.key]: v })}
+        />
+      );
+    }
+
+    if (field.type === 'month-or-present') {
+      return (
+        <DateInput
+          value={value}
+          onChange={(v) => store.updateItem(module.id, item.id, { [field.key]: v })}
+          allowPresent
+        />
+      );
+    }
 
     if (field.type === 'textarea') {
       return (
@@ -145,6 +168,15 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
               <span>{module.title}</span>
               <span className="text-xs text-gray-400 font-normal ml-1">({module.items.length})</span>
             </button>
+            {SORTABLE_TYPES.includes(module.type) && (
+              <button
+                onClick={() => store.toggleModuleSort(module.id)}
+                className={`p-1 ${module.sortByDateDesc ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                title={module.sortByDateDesc ? '已按时间倒序（点击关闭）' : '按时间倒序'}
+              >
+                <ArrowDownWideNarrow size={14} />
+              </button>
+            )}
             <button
               onClick={() => setEditingTitle(true)}
               className="text-gray-400 hover:text-blue-600 p-1"
@@ -182,19 +214,23 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
           </div>
         ) : (
         <div className="p-4 space-y-3">
-          {module.items.map((item, itemIndex) => (
+          {(module.sortByDateDesc ? sortItemsByDateDesc(module.items, module.type) : module.items).map((item, itemIndex) => {
+            const sortLocked = !!module.sortByDateDesc;
+            return (
             <div
               key={item.id}
               className="border border-gray-200 rounded-md p-3 bg-gray-50/50"
-              draggable
-              onDragStart={() => handleItemDragStart(itemIndex)}
-              onDragOver={(e) => handleItemDragOver(e, itemIndex)}
+              draggable={!sortLocked}
+              onDragStart={() => { if (!sortLocked) handleItemDragStart(itemIndex); }}
+              onDragOver={(e) => { if (!sortLocked) handleItemDragOver(e, itemIndex); }}
               onDragEnd={handleItemDragEnd}
             >
               <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-1 text-gray-400 cursor-move">
+                <div className={`flex items-center gap-1 ${sortLocked ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 cursor-move'}`}
+                  title={sortLocked ? '排序模式下不可拖拽' : ''}
+                >
                   <GripVertical size={14} />
-                  <span className="text-xs text-gray-400">条目 {itemIndex + 1}</span>
+                  <span className="text-xs">条目 {itemIndex + 1}</span>
                 </div>
                 <button
                   onClick={() => store.removeItem(module.id, item.id)}
@@ -213,7 +249,8 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
 
           <button
             onClick={() => store.addItem(module.id)}
