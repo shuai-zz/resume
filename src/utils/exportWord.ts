@@ -5,6 +5,7 @@ import {
 import { saveAs } from 'file-saver';
 import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { sortItemsByDateDesc } from './sortItems';
+import { formatDateRange } from './dateRange';
 
 function createSectionTitle(title: string): Paragraph {
   return new Paragraph({
@@ -30,12 +31,12 @@ function renderModule(module: ResumeModule): Paragraph[] {
     case 'experience':
       module.items.forEach((item) => {
         const exp = item as ExperienceItem;
+        const range = formatDateRange(exp.startDate, exp.endDate);
+        const headRuns: TextRun[] = [new TextRun({ text: exp.company, bold: true, size: 22 })];
+        if (range) headRuns.push(new TextRun({ text: `  ${range}`, size: 20, color: '666666' }));
         children.push(
           new Paragraph({
-            children: [
-              new TextRun({ text: exp.company, bold: true, size: 22 }),
-              new TextRun({ text: `  ${exp.startDate} - ${exp.endDate}`, size: 20, color: '666666' }),
-            ],
+            children: headRuns,
             spacing: { before: 100, after: 40 },
           }),
           new Paragraph({
@@ -53,12 +54,12 @@ function renderModule(module: ResumeModule): Paragraph[] {
     case 'education':
       module.items.forEach((item) => {
         const edu = item as EducationItem;
+        const range = formatDateRange(edu.startDate, edu.endDate);
+        const headRuns: TextRun[] = [new TextRun({ text: edu.school, bold: true, size: 22 })];
+        if (range) headRuns.push(new TextRun({ text: `  ${range}`, size: 20, color: '666666' }));
         children.push(
           new Paragraph({
-            children: [
-              new TextRun({ text: edu.school, bold: true, size: 22 }),
-              new TextRun({ text: `  ${edu.startDate} - ${edu.endDate}`, size: 20, color: '666666' }),
-            ],
+            children: headRuns,
             spacing: { before: 100, after: 40 },
           }),
           new Paragraph({
@@ -80,12 +81,12 @@ function renderModule(module: ResumeModule): Paragraph[] {
     case 'projects':
       module.items.forEach((item) => {
         const proj = item as ProjectItem;
+        const range = formatDateRange(proj.startDate, proj.endDate);
+        const headRuns: TextRun[] = [new TextRun({ text: proj.name, bold: true, size: 22 })];
+        if (range) headRuns.push(new TextRun({ text: `  ${range}`, size: 20, color: '666666' }));
         children.push(
           new Paragraph({
-            children: [
-              new TextRun({ text: proj.name, bold: true, size: 22 }),
-              new TextRun({ text: `  ${proj.startDate} - ${proj.endDate}`, size: 20, color: '666666' }),
-            ],
+            children: headRuns,
             spacing: { before: 100, after: 40 },
           }),
           new Paragraph({
@@ -124,16 +125,12 @@ function renderModule(module: ResumeModule): Paragraph[] {
     case 'custom':
       module.items.forEach((item) => {
         const custom = item as CustomItem;
+        const range = formatDateRange(custom.startDate, custom.endDate);
+        const headRuns: TextRun[] = [new TextRun({ text: custom.title, bold: true, size: 22 })];
+        if (range) headRuns.push(new TextRun({ text: `  ${range}`, size: 20, color: '666666' }));
         children.push(
           new Paragraph({
-            children: [
-              new TextRun({ text: custom.title, bold: true, size: 22 }),
-              new TextRun({
-                text: `  ${custom.startDate} ${custom.endDate ? `- ${custom.endDate}` : ''}`,
-                size: 20,
-                color: '666666',
-              }),
-            ],
+            children: headRuns,
             spacing: { before: 100, after: 40 },
           })
         );

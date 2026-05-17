@@ -2,6 +2,7 @@ import { Mail, Phone, MapPin, Globe } from 'lucide-react';
 import { ResumeData, ResumeModule, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
 import { getIcon } from '../utils/icons';
+import { formatDateRange } from '../utils/dateRange';
 
 function ModuleSection({ module }: { module: ResumeModule }) {
   const renderItem = () => {
@@ -9,11 +10,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'experience':
         return module.items.map((item) => {
           const exp = item as ExperienceItem;
+          const range = formatDateRange(exp.startDate, exp.endDate, '–');
           return (
             <div key={item.id} className="mb-3">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-bold text-gray-800">{exp.position}</h3>
-                <span className="text-gray-500 text-xs">{exp.startDate} – {exp.endDate}</span>
+                {range && <span className="text-gray-500 text-xs">{range}</span>}
               </div>
               <p className="text-gray-700 italic mb-1">{exp.company}</p>
               <MarkdownContent text={exp.description} className="text-gray-700" />
@@ -24,11 +26,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'education':
         return module.items.map((item) => {
           const edu = item as EducationItem;
+          const range = formatDateRange(edu.startDate, edu.endDate, '–');
           return (
             <div key={item.id} className="mb-2">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-bold text-gray-800">{edu.school}</h3>
-                <span className="text-gray-500 text-xs">{edu.startDate} – {edu.endDate}</span>
+                {range && <span className="text-gray-500 text-xs">{range}</span>}
               </div>
               <p className="text-gray-700">
                 {edu.degree}，{edu.field}
@@ -42,11 +45,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'projects':
         return module.items.map((item) => {
           const proj = item as ProjectItem;
+          const range = formatDateRange(proj.startDate, proj.endDate, '–');
           return (
             <div key={item.id} className="mb-2">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-bold text-gray-800">{proj.name}</h3>
-                <span className="text-gray-500 text-xs">{proj.startDate} – {proj.endDate}</span>
+                {range && <span className="text-gray-500 text-xs">{range}</span>}
               </div>
               <p className="text-gray-700 italic text-xs mb-1">{proj.role}</p>
               <MarkdownContent text={proj.description} className="text-gray-700" />
@@ -65,11 +69,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'custom':
         return module.items.map((item) => {
           const custom = item as CustomItem;
+          const range = formatDateRange(custom.startDate, custom.endDate, '–');
           return (
             <div key={item.id} className="mb-2">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-bold text-gray-800">{custom.title}</h3>
-                <span className="text-gray-500 text-xs">{custom.startDate} {custom.endDate && `– ${custom.endDate}`}</span>
+                {range && <span className="text-gray-500 text-xs">{range}</span>}
               </div>
               {custom.subtitle && <p className="text-gray-700 italic text-xs mb-1">{custom.subtitle}</p>}
               <MarkdownContent text={custom.description} className="text-gray-700" />

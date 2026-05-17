@@ -1,5 +1,6 @@
 import { ResumeData, ResumeModule, ModuleType, ExperienceItem, EducationItem, ProjectItem, SummaryItem, CustomItem } from '../types/resume';
 import { MarkdownContent } from '../utils/markdown';
+import { formatDateRange } from '../utils/dateRange';
 
 const leftTypes: ModuleType[] = ['experience', 'projects', 'custom'];
 const rightTypes: ModuleType[] = ['education'];
@@ -10,10 +11,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'experience':
         return module.items.map((item) => {
           const exp = item as ExperienceItem;
+          const range = formatDateRange(exp.startDate, exp.endDate);
+          const meta = [exp.position, range].filter(Boolean).join(' · ');
           return (
             <div key={item.id} className="mb-4">
               <h3 className="font-bold text-gray-800">{exp.company}</h3>
-              <p className="text-gray-500 text-xs mb-1">{exp.position} · {exp.startDate} - {exp.endDate}</p>
+              {meta && <p className="text-gray-500 text-xs mb-1">{meta}</p>}
               <MarkdownContent text={exp.description} className="text-gray-600" />
             </div>
           );
@@ -22,6 +25,7 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'education':
         return module.items.map((item) => {
           const edu = item as EducationItem;
+          const range = formatDateRange(edu.startDate, edu.endDate);
           return (
             <div key={item.id} className="mb-2">
               <h3 className="font-bold text-gray-800 text-sm">{edu.school}</h3>
@@ -29,7 +33,7 @@ function ModuleSection({ module }: { module: ResumeModule }) {
                 {edu.degree}
                 {edu.ranking && <span className="ml-1 text-amber-600">· {edu.ranking}</span>}
               </p>
-              <p className="text-gray-400 text-xs">{edu.startDate} - {edu.endDate}</p>
+              {range && <p className="text-gray-400 text-xs">{range}</p>}
             </div>
           );
         });
@@ -37,10 +41,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'projects':
         return module.items.map((item) => {
           const proj = item as ProjectItem;
+          const range = formatDateRange(proj.startDate, proj.endDate);
+          const meta = [proj.role, range].filter(Boolean).join(' · ');
           return (
             <div key={item.id} className="mb-3">
               <h3 className="font-bold text-gray-800">{proj.name}</h3>
-              <p className="text-gray-500 text-xs mb-1">{proj.role} · {proj.startDate} - {proj.endDate}</p>
+              {meta && <p className="text-gray-500 text-xs mb-1">{meta}</p>}
               <MarkdownContent text={proj.description} className="text-gray-600" />
             </div>
           );
@@ -57,10 +63,12 @@ function ModuleSection({ module }: { module: ResumeModule }) {
       case 'custom':
         return module.items.map((item) => {
           const custom = item as CustomItem;
+          const range = formatDateRange(custom.startDate, custom.endDate);
+          const meta = [custom.subtitle, range].filter(Boolean).join(' · ');
           return (
             <div key={item.id} className="mb-3">
               <h3 className="font-bold text-gray-800">{custom.title}</h3>
-              {custom.subtitle && <p className="text-gray-500 text-xs mb-1">{custom.subtitle} · {custom.startDate} {custom.endDate && `- ${custom.endDate}`}</p>}
+              {meta && <p className="text-gray-500 text-xs mb-1">{meta}</p>}
               <MarkdownContent text={custom.description} className="text-gray-600" />
             </div>
           );
