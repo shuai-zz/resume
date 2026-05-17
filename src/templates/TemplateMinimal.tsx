@@ -107,7 +107,7 @@ export default function TemplateMinimal({ data }: { data: ResumeData }) {
           <img
             src={personalInfo.avatar}
             alt="头像"
-            className="w-16 h-16 rounded-full object-cover border border-gray-200 shrink-0"
+            className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0"
           />
         )}
         <div>

@@ -104,7 +104,7 @@ export default function TemplateClassic({ data }: { data: ResumeData }) {
           <img
             src={personalInfo.avatar}
             alt="头像"
-            className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 mx-auto mb-3"
+            className="w-20 h-20 rounded-md object-cover border-2 border-gray-300 mx-auto mb-3"
           />
         )}
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{personalInfo.name}</h1>

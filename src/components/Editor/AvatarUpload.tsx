@@ -51,7 +51,7 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
             <img
               src={avatar}
               alt="头像"
-              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+              className="w-20 h-20 rounded-md object-cover border-2 border-gray-200"
             />
             <button
               onClick={handleRemove}
@@ -66,7 +66,7 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
             onClick={handleClick}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            className="w-20 h-20 rounded-md bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
           >
             <User size={28} className="text-gray-400" />
           </div>
