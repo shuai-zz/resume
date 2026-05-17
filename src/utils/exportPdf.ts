@@ -94,12 +94,75 @@ function fixCloneForPdf(clone: HTMLElement) {
     svg.parentNode?.replaceChild(img, svg);
   });
 
-  // ── 3. 移除阴影 ──
+  // ── 3. 修复 Markdown 列表的项目符号位置 ──
+  // html2canvas 渲染原生 list-marker（disc / decimal）时位置整体偏上，
+  // 改成 absolute 定位的 <span> 手绘符号，对齐到 li 第一行文字基线。
+  clone.querySelectorAll('.markdown-content ul').forEach((ul) => {
+    const ulEl = ul as HTMLElement;
+    ulEl.style.listStyleType = 'none';
+    ulEl.style.paddingLeft = '0';
+    Array.from(ulEl.children).forEach((child) => {
+      if (child.tagName !== 'LI') return;
+      const li = child as HTMLElement;
+      li.style.paddingLeft = '1.2em';
+      li.style.position = 'relative';
+      const bullet = document.createElement('span');
+      bullet.textContent = '•';
+      bullet.style.position = 'absolute';
+      bullet.style.left = '0.3em';
+      bullet.style.top = '0';
+      bullet.style.lineHeight = 'inherit';
+      li.insertBefore(bullet, li.firstChild);
+    });
+  });
+
+  clone.querySelectorAll('.markdown-content ol').forEach((ol) => {
+    const olEl = ol as HTMLElement;
+    olEl.style.listStyleType = 'none';
+    olEl.style.paddingLeft = '0';
+    let i = 1;
+    Array.from(olEl.children).forEach((child) => {
+      if (child.tagName !== 'LI') return;
+      const li = child as HTMLElement;
+      li.style.paddingLeft = '1.6em';
+      li.style.position = 'relative';
+      const bullet = document.createElement('span');
+      bullet.textContent = `${i++}.`;
+      bullet.style.position = 'absolute';
+      bullet.style.left = '0';
+      bullet.style.top = '0';
+      bullet.style.lineHeight = 'inherit';
+      li.insertBefore(bullet, li.firstChild);
+    });
+  });
+
+  // ── 4. 修复 inline 带背景色的小徽章基线 ──
+  // 现代风格里 edu.ranking 用 <span class="bg-amber-100 text-xs ...">，
+  // 默认是 inline + baseline，在 html2canvas 里会整体上移；
+  // 改成 inline-block + vertical-align: middle，让徽章在行中垂直居中。
+  clone.querySelectorAll('span').forEach((el) => {
+    const span = el as HTMLElement;
+    const computed = window.getComputedStyle(span);
+    const bg = computed.backgroundColor;
+    const hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+    if (hasBg && computed.display === 'inline') {
+      span.style.display = 'inline-block';
+      span.style.verticalAlign = 'middle';
+      // 收紧 line-height 与 padding-top，让高亮框顶部下降 ~3px，
+      // 文字基线保持与同行其他内容一致，不再整体偏高。
+      span.style.lineHeight = '1';
+      span.style.paddingTop = '5';
+      span.style.paddingBottom = '10px';
+      span.style.transform = 'translateY(1px)';
+    }
+  });
+
+  // ── 5. 移除阴影 ──
   clone.querySelectorAll('[class*="shadow"]').forEach((el) => {
     (el as HTMLElement).style.boxShadow = 'none';
   });
 
-  // ── 4. 固定 a4-page ──
+  // ── 6. 固定 a4-page ──
   const a4Page = clone.querySelector('.a4-page') as HTMLElement | null;
   if (a4Page) {
     a4Page.style.width = '210mm';
@@ -118,6 +181,24 @@ export async function exportToPdf(elementId: string, filename: string = '简历.
   const originalScrollTop = previewContainer?.scrollTop || 0;
   if (previewContainer) previewContainer.scrollTop = 0;
 
+  // ── 收集模块边界（用于按模块分页） ──
+  // 切点用「下一个模块的顶部」而不是「当前模块的底部」：
+  // 模块底部刚好贴着最后一行文字下沿，硬切会切穿字母 descender；
+  // 而模块之间天然有 mb-* 的 margin 空隙（16-24px），切在那里有缓冲。
+  const a4Page = element.querySelector('.a4-page') as HTMLElement | null;
+  const breakYsCssPx: number[] = [];
+  if (a4Page) {
+    const pageTop = a4Page.getBoundingClientRect().top;
+    const children = Array.from(a4Page.children);
+    // 跳过第 0 个：切在头部顶部 = 空页，没意义
+    for (let i = 1; i < children.length; i++) {
+      const rect = (children[i] as HTMLElement).getBoundingClientRect();
+      breakYsCssPx.push(rect.top - pageTop);
+    }
+    // 最后一个切点 = 全页底部（含 padding-bottom）
+    breakYsCssPx.push(a4Page.scrollHeight);
+  }
+
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
@@ -129,27 +210,58 @@ export async function exportToPdf(elementId: string, filename: string = '简历.
 
   if (previewContainer) previewContainer.scrollTop = originalScrollTop;
 
-  const imgData = canvas.toDataURL('image/png');
   const pdf = new jsPDF('p', 'mm', 'a4');
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = canvas.width;
-  const imgHeight = canvas.height;
+  const pdfWidthMm = pdf.internal.pageSize.getWidth();
+  const pdfHeightMm = pdf.internal.pageSize.getHeight();
 
-  const ratio = pdfWidth / imgWidth;
-  const scaledHeight = imgHeight * ratio;
+  // 把 CSS px 断点换算为 canvas px（html2canvas scale=2，但保险起见用实测比例）
+  const cssToCanvas = a4Page ? canvas.height / a4Page.scrollHeight : 2;
+  const breakCanvasYs = breakYsCssPx
+    .map((y) => Math.round(y * cssToCanvas))
+    .filter((y) => y > 0 && y <= canvas.height)
+    .sort((a, b) => a - b);
 
-  let heightLeft = scaledHeight;
-  let position = 0;
+  // 一页 PDF 对应的 canvas 像素高度（保持等比缩放，canvas 宽对应 pdfWidthMm）
+  const pageHeightInCanvasPx = canvas.width * (pdfHeightMm / pdfWidthMm);
 
-  pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-  heightLeft -= pdfHeight;
+  let cursor = 0;
+  let isFirst = true;
+  // 兜底防死循环：理论上不会触发
+  let safety = 0;
+  while (cursor < canvas.height - 1 && safety++ < 50) {
+    const maxBottom = Math.min(cursor + pageHeightInCanvasPx, canvas.height);
 
-  while (heightLeft > 0) {
-    position = heightLeft - scaledHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-    heightLeft -= pdfHeight;
+    // 找 (cursor, maxBottom] 区间内最大的模块边界。
+    // 优先模块对齐，不再用最小填充阈值兜底硬切——
+    // 任何「内容不被切」的页面都比「内容被横切」更好，即使页面不太满。
+    let nextBreak = -1;
+    for (const bp of breakCanvasYs) {
+      if (bp > cursor && bp <= maxBottom && bp > nextBreak) {
+        nextBreak = bp;
+      }
+    }
+    // 仅当区间内完全没有模块边界（单个模块比一页还高）时才硬切
+    if (nextBreak === -1) {
+      nextBreak = maxBottom;
+    }
+
+    const sliceHeight = Math.ceil(nextBreak - cursor);
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = canvas.width;
+    sliceCanvas.height = sliceHeight;
+    const ctx = sliceCanvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+      ctx.drawImage(canvas, 0, -cursor);
+    }
+
+    const sliceData = sliceCanvas.toDataURL('image/png');
+    if (!isFirst) pdf.addPage();
+    const sliceHeightMm = sliceHeight * (pdfWidthMm / canvas.width);
+    pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidthMm, sliceHeightMm);
+    isFirst = false;
+    cursor = nextBreak;
   }
 
   pdf.save(filename);

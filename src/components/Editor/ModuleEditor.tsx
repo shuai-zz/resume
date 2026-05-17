@@ -93,8 +93,8 @@ export default function ModuleEditor({ module, index, expandSignal, onDragStart,
           value={value}
           onChange={(e) => store.updateItem(module.id, item.id, { [field.key]: e.target.value })}
           placeholder={field.placeholder}
-          rows={2}
-          className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          rows={6}
+          className="w-full min-h-[8rem] border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono leading-relaxed"
         />
       );
     }
