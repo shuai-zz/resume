@@ -126,7 +126,8 @@ export default function ResumeForm() {
           <div className="space-y-3 mt-3">
             <AvatarUpload
               avatar={store.personalInfo.avatar}
-              onChange={(avatar) => store.updatePersonalInfo({ avatar })}
+              aspect={store.personalInfo.avatarAspect ?? 1}
+              onChange={(avatar, avatarAspect) => store.updatePersonalInfo({ avatar, avatarAspect })}
             />
             <div className="grid grid-cols-2 gap-3">
               <div>

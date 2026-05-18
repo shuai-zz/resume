@@ -110,15 +110,16 @@ export default function TemplateMinimal({ data }: { data: ResumeData }) {
   return (
     <div className="a4-page p-10 text-sm">
       {/* Header */}
-      <div className="mb-8 flex items-center gap-5">
+      <div className="mb-8 flex items-start gap-6">
         {personalInfo.avatar && (
           <img
             src={personalInfo.avatar}
             alt="头像"
-            className="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0"
+            className="rounded-md object-cover border border-gray-200 shrink-0 mt-1"
+            style={{ width: '80px', height: `${80 / (personalInfo.avatarAspect || 1)}px` }}
           />
         )}
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-4xl font-light text-gray-900 mb-2 tracking-tight">{personalInfo.name}</h1>
           <p className="text-gray-500 text-sm mb-3">{personalInfo.title}</p>
           <div className="flex flex-wrap gap-3 text-xs text-gray-400">

@@ -30,6 +30,9 @@ export function sanitizeResumeData(raw: any): ResumeData {
       ...defaultResumeData.personalInfo,
       ...personalInfoRest,
       customFields,
+      avatarAspect: typeof personalInfoRest.avatarAspect === 'number' && personalInfoRest.avatarAspect > 0
+        ? personalInfoRest.avatarAspect
+        : 1,
     },
     modules,
     template: raw?.template || defaultResumeData.template,

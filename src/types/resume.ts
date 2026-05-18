@@ -72,6 +72,7 @@ export interface PersonalInfo {
   name: string;
   title: string;
   avatar: string;
+  avatarAspect?: number; // 头像宽/高比例，默认 1（方形）；裁剪后由 AvatarCropper 写入
   email: string;
   phone: string;
   location: string;

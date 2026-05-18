@@ -1,13 +1,16 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { Upload, X, User } from 'lucide-react';
+import AvatarCropper from './AvatarCropper';
 
 interface AvatarUploadProps {
   avatar: string;
-  onChange: (avatar: string) => void;
+  aspect: number;
+  onChange: (avatar: string, aspect: number) => void;
 }
 
-export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
+export default function AvatarUpload({ avatar, aspect, onChange }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingSrc, setPendingSrc] = useState<string | null>(null);
 
   const handleFileSelect = useCallback((file: File | null) => {
     if (!file) return;
@@ -19,16 +22,19 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      onChange(e.target?.result as string);
+      setPendingSrc(e.target?.result as string);
     };
     reader.readAsDataURL(file);
-  }, [onChange]);
+  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    handleFileSelect(file);
-  }, [handleFileSelect]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      handleFileSelect(file);
+    },
+    [handleFileSelect],
+  );
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -39,60 +45,78 @@ export default function AvatarUpload({ avatar, onChange }: AvatarUploadProps) {
   };
 
   const handleRemove = () => {
-    onChange('');
+    onChange('', 1);
+  };
+
+  const handleCropConfirm = (dataURL: string, newAspect: number) => {
+    onChange(dataURL, newAspect);
+    setPendingSrc(null);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleCropCancel = () => {
+    setPendingSrc(null);
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   return (
-    <div className="flex items-center gap-4">
-      {/* Avatar Preview */}
-      <div className="relative shrink-0">
-        {avatar ? (
-          <div className="relative group">
-            <img
-              src={avatar}
-              alt="头像"
-              className="w-20 h-20 rounded-md object-cover border-2 border-gray-200 dark:border-slate-700"
-            />
-            <button
-              onClick={handleRemove}
-              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              title="删除头像"
+    <>
+      <div className="flex items-center gap-4">
+        {/* Avatar Preview */}
+        <div className="relative shrink-0">
+          {avatar ? (
+            <div className="relative group">
+              <img
+                src={avatar}
+                alt="头像"
+                className="rounded-md object-cover border-2 border-gray-200 dark:border-slate-700"
+                style={{ width: '80px', height: `${80 / (aspect || 1)}px` }}
+              />
+              <button
+                onClick={handleRemove}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                title="删除头像"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={handleClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="w-20 h-20 rounded-md bg-gray-100 dark:bg-slate-800 border-2 border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
             >
-              <X size={12} />
-            </button>
-          </div>
-        ) : (
-          <div
+              <User size={28} className="text-gray-400 dark:text-slate-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Upload Controls */}
+        <div className="flex-1">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+            className="hidden"
+          />
+          <button
             onClick={handleClick}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            className="w-20 h-20 rounded-md bg-gray-100 dark:bg-slate-800 border-2 border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md transition-colors font-medium"
           >
-            <User size={28} className="text-gray-400 dark:text-slate-500" />
-          </div>
-        )}
+            <Upload size={14} />
+            {avatar ? '更换头像' : '上传头像'}
+          </button>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">
+            支持 JPG、PNG 格式，最大 2MB
+          </p>
+        </div>
       </div>
 
-      {/* Upload Controls */}
-      <div className="flex-1">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-          className="hidden"
-        />
-        <button
-          onClick={handleClick}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md transition-colors font-medium"
-        >
-          <Upload size={14} />
-          {avatar ? '更换头像' : '上传头像'}
-        </button>
-        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">
-          支持 JPG、PNG 格式，最大 2MB
-        </p>
-      </div>
-    </div>
+      {pendingSrc && (
+        <AvatarCropper src={pendingSrc} onConfirm={handleCropConfirm} onCancel={handleCropCancel} />
+      )}
+    </>
   );
 }

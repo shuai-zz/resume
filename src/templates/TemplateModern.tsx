@@ -123,7 +123,8 @@ export default function TemplateModern({ data }: { data: ResumeData }) {
             <img
               src={personalInfo.avatar}
               alt="头像"
-              className="w-24 h-24 rounded-md object-cover border-2 border-gray-100 shrink-0"
+              className="rounded-md object-cover border-2 border-gray-100 shrink-0"
+              style={{ width: '96px', height: `${96 / (personalInfo.avatarAspect || 1)}px` }}
             />
           )}
           <div className="flex-1">

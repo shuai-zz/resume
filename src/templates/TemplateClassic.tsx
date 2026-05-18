@@ -104,38 +104,41 @@ export default function TemplateClassic({ data }: { data: ResumeData }) {
   return (
     <div className="a4-page p-12 text-sm font-serif">
       {/* Header */}
-      <div className="text-center border-b-2 border-gray-800 pb-4 mb-6">
+      <div className="border-b-2 border-gray-800 pb-4 mb-6 flex items-center gap-6">
         {personalInfo.avatar && (
           <img
             src={personalInfo.avatar}
             alt="头像"
-            className="w-20 h-20 rounded-md object-cover border-2 border-gray-300 mx-auto mb-3"
+            className="rounded-md object-cover border-2 border-gray-300 shrink-0"
+            style={{ width: '88px', height: `${88 / (personalInfo.avatarAspect || 1)}px` }}
           />
         )}
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{personalInfo.name}</h1>
-        <p className="text-base text-gray-700 mb-2 italic">{personalInfo.title}</p>
-        <div className="flex justify-center flex-wrap gap-4 text-gray-600 text-xs">
-          {personalInfo.email && (
-            <span className="flex items-center gap-1"><Mail size={12} /> {personalInfo.email}</span>
-          )}
-          {personalInfo.phone && (
-            <span className="flex items-center gap-1"><Phone size={12} /> {personalInfo.phone}</span>
-          )}
-          {personalInfo.location && (
-            <span className="flex items-center gap-1"><MapPin size={12} /> {personalInfo.location}</span>
-          )}
-          {personalInfo.website && (
-            <span className="flex items-center gap-1"><Globe size={12} /> {personalInfo.website}</span>
-          )}
-          {personalInfo.customFields?.map((f) => {
-            if (!f.value) return null;
-            const Icon = getIcon(f.icon);
-            return (
-              <span key={f.id} className="flex items-center gap-1">
-                <Icon size={12} /> {f.label && `${f.label}: `}{f.value}
-              </span>
-            );
-          })}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1 leading-tight">{personalInfo.name}</h1>
+          <p className="text-base text-gray-700 mb-2 italic">{personalInfo.title}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-gray-600 text-xs">
+            {personalInfo.email && (
+              <span className="flex items-center gap-1"><Mail size={12} /> {personalInfo.email}</span>
+            )}
+            {personalInfo.phone && (
+              <span className="flex items-center gap-1"><Phone size={12} /> {personalInfo.phone}</span>
+            )}
+            {personalInfo.location && (
+              <span className="flex items-center gap-1"><MapPin size={12} /> {personalInfo.location}</span>
+            )}
+            {personalInfo.website && (
+              <span className="flex items-center gap-1"><Globe size={12} /> {personalInfo.website}</span>
+            )}
+            {personalInfo.customFields?.map((f) => {
+              if (!f.value) return null;
+              const Icon = getIcon(f.icon);
+              return (
+                <span key={f.id} className="flex items-center gap-1">
+                  <Icon size={12} /> {f.label && `${f.label}: `}{f.value}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
 
