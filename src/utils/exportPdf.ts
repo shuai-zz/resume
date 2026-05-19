@@ -269,15 +269,19 @@ export async function exportToPdf(elementId: string, filename: string = '简历.
     .filter((y) => y > 0 && y <= canvas.height)
     .sort((a, b) => a - b);
 
-  // 一页 PDF 对应的 canvas 像素高度（保持等比缩放，canvas 宽对应 pdfWidthMm）
-  const pageHeightInCanvasPx = canvas.width * (pdfHeightMm / pdfWidthMm);
+  // 非首页顶部留白（mm）。首页不加是因为模板自身已经有 padding，
+  // 加了会让头部双重缩进；后续页直接从模块顶部起渲染会顶到纸边，需补一段。
+  const PAGE_TOP_MARGIN_MM = 8;
 
   let cursor = 0;
   let isFirst = true;
   // 兜底防死循环：理论上不会触发
   let safety = 0;
   while (cursor < canvas.height - 1 && safety++ < 50) {
-    const maxBottom = Math.min(cursor + pageHeightInCanvasPx, canvas.height);
+    const topMarginMm = isFirst ? 0 : PAGE_TOP_MARGIN_MM;
+    // 一页 PDF 可用画布像素高度（保持等比缩放，canvas 宽对应 pdfWidthMm）
+    const pageBudgetCanvasPx = canvas.width * ((pdfHeightMm - topMarginMm) / pdfWidthMm);
+    const maxBottom = Math.min(cursor + pageBudgetCanvasPx, canvas.height);
 
     // 找 (cursor, maxBottom] 区间内最大的模块边界。
     // 优先模块对齐，不再用最小填充阈值兜底硬切——
@@ -304,10 +308,10 @@ export async function exportToPdf(elementId: string, filename: string = '简历.
       ctx.drawImage(canvas, 0, -cursor);
     }
 
-    const sliceData = sliceCanvas.toDataURL('image/png');
+    const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
     if (!isFirst) pdf.addPage();
     const sliceHeightMm = sliceHeight * (pdfWidthMm / canvas.width);
-    pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidthMm, sliceHeightMm);
+    pdf.addImage(sliceData, 'JPEG', 0, topMarginMm, pdfWidthMm, sliceHeightMm);
     isFirst = false;
     cursor = nextBreak;
   }
